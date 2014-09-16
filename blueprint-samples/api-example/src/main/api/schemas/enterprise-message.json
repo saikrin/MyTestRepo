@@ -1,0 +1,58 @@
+{
+	"type":"object",
+	"$schema": "http://json-schema.org/draft-03/schema",
+	"id": "http://jsonschema.net",
+	"required":false,
+	"properties":{
+		"endpoints": {
+			"type":"array",
+			"id": "http://jsonschema.net/endpoints",
+			"required":false,
+			"items":
+				{
+					"type":"object",
+					"id": "http://jsonschema.net/endpoints/0",
+					"required":false,
+					"properties":{
+						"type": {
+							"type":"string",
+							"id": "http://jsonschema.net/endpoints/0/type",
+							"required":false
+						},
+						"address": {
+							"type":"string",
+							"id": "http://jsonschema.net/endpoints/0/address",
+							"required":false
+						},
+						"exchangePattern": {
+							"type":"string",
+							"id": "http://jsonschema.net/endpoints/0/exchange-pattern",
+							"required":false
+						}
+					}
+				}
+			
+
+		},
+		"id": {
+			"type":"string",
+			"id": "http://jsonschema.net/id",
+			"required":false
+		},
+		"payload": {
+			"type":"string",
+			"id": "http://jsonschema.net/payload",
+			"required":false
+		},
+		"source": {
+			"type":"string",
+			"id": "http://jsonschema.net/source",
+			"required":false
+		},
+		"target": {
+			"type":"string",
+			"id": "http://jsonschema.net/target",
+			"required":false
+		}
+	}
+}

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:zuul="http://www.devnull.org/schema/zuul-spring-client"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:bpm="http://www.mulesoft.org/schema/mule/bpm"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/bpm http://www.mulesoft.org/schema/mule/bpm/current/mule-bpm.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.devnull.org/schema/zuul-spring-client http://www.devnull.org/schema/zuul-spring-client.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd" version="EE-3.5.0">
+
+
+	<http:connector name="httpConnector" doc:name="HTTP-HTTPS">
+		<service-overrides sessionHandler="org.mule.session.NullSessionHandler" />
+	</http:connector>
+	<spring:beans>
+		<spring:bean name="NoFactsBean" class="java.util.ArrayList" />
+	</spring:beans>
+	<apikit:config name="gatewayApi" raml="gateway.raml"
+		consoleEnabled="false" doc:name="Router"/>
+
+	<context:property-placeholder location="gateway.properties" />
+
+	<apikit:mapping-exception-strategy
+		name="apiKitGlobalExceptionMapping">
+		<apikit:mapping statusCode="404">
+			<apikit:exception
+				value="org.mule.module.apikit.exception.NotFoundException" />
+			<set-property propertyName="Content-Type" value="application/json" />
+			<set-payload
+				value="{ &quot;message&quot;: &quot;Resource not found&quot; }" />
+		</apikit:mapping>
+		<apikit:mapping statusCode="405">
+			<apikit:exception
+				value="org.mule.module.apikit.exception.MethodNotAllowedException" />
+			<set-property propertyName="Content-Type" value="application/json" />
+			<set-payload
+				value="{ &quot;message&quot;: &quot;Method not allowed&quot; }" />
+		</apikit:mapping>
+		<apikit:mapping statusCode="415">
+			<apikit:exception
+				value="org.mule.module.apikit.exception.UnsupportedMediaTypeException" />
+			<set-property propertyName="Content-Type" value="application/json" />
+			<set-payload
+				value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }" />
+		</apikit:mapping>
+		<apikit:mapping statusCode="406">
+			<apikit:exception
+				value="org.mule.module.apikit.exception.NotAcceptableException" />
+			<set-property propertyName="Content-Type" value="application/json" />
+			<set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }" />
+		</apikit:mapping>
+		<apikit:mapping statusCode="400">
+			<apikit:exception
+				value="org.mule.module.apikit.exception.BadRequestException" />
+			<set-property propertyName="Content-Type" value="application/json" />
+			<set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" />
+		</apikit:mapping>
+	</apikit:mapping-exception-strategy>
+
+	<bpm:drools />
+    <flow name="main" doc:name="main">
+		<http:inbound-endpoint address="http://localhost:${http.port}/gateway/api"
+			connector-ref="httpConnector" doc:name="HTTP"/>
+		<logger level="INFO" message="APIKit received: #[groovy:message.getPayloadAsString()]" category="com.umg.blueprint" doc:name="Logger"/>
+		<set-payload value="{'source': 'dsr'}" />
+		<set-property propertyName="Content-Type" value="application/json" />
+		<logger level="INFO" />
+		<apikit:router config-ref="gatewayApi" doc:name="APIkit Router"/>
+		<exception-strategy ref="apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
+	</flow>
+    <flow name="console" doc:name="console">
+		<http:inbound-endpoint address="http://localhost:${http.port}/gateway/console"
+			connector-ref="httpConnector" doc:name="HTTP"/>
+		<logger level="INFO" message="Console received: #[groovy:message.getPayloadAsString()]" category="com.umg.blueprint" doc:name="Logger"/>
+		<apikit:console config-ref="gatewayApi" doc:name="APIkit Console"/>
+	</flow>
+	<flow name="post:/routes:gatewayApi" doc:name="post:/routes:gatewayApi">
+		<json:json-to-object-transformer
+			returnClass="com.umg.blueprint.EnterpriseMessage" doc:name="JSON to Object"/>
+		<expression-component>
+			payload.id = UUID.randomUUID();
+		</expression-component>
+		<logger level="INFO" category="com.umg.blueprint" message="Payload before applying rules:" doc:name="Logger"/>
+		<logger level="INFO" category="com.umg.blueprint" message="#[message.payload]" doc:name="Logger"/>
+		<bpm:rules rulesDefinition="gateway.drl" initialFacts-ref="NoFactsBean" />
+		<logger level="INFO" category="com.umg.blueprint" message="Payload after applying rules:" doc:name="Logger"/>
+		<logger level="INFO" category="com.umg.blueprint" message="#[message.payload.object]" doc:name="Logger"/>
+
+		<and-filter doc:name="And">
+			<expression-filter expression="#[message.payload.object != null]" />
+			<expression-filter expression="#[message.payload.object.endpoints.size() > 0]" />
+		</and-filter>
+
+		<set-payload value="#[message.payload.object]" doc:name="Set Payload"/>
+		
+		<set-variable variableName="address" value="#[groovy:payload.endpoints[0].address]"/>
+		<set-variable variableName="exchangePattern" value="#[groovy:payload.endpoints[0].exchangePattern]"/>
+
+		
+		<choice>
+			<when expression="#[exchangePattern == org.mule.MessageExchangePattern.ONE_WAY]">
+				<vm:outbound-endpoint exchange-pattern="one-way"
+					path="#[address]" doc:name="VM"/>
+			</when>
+			<otherwise>
+				<vm:outbound-endpoint exchange-pattern="request-response"
+					path="#[address]" doc:name="VM"/>
+			</otherwise>
+		</choice>
+
+		<json:object-to-json-transformer doc:name="Object to JSON"/>
+
+	</flow>
+    <flow name="get:/routes:gatewayApi" doc:name="get:/routes:gatewayApi">
+        <logger message="#[message.payload]" level="INFO" category="com.umg.blueprint" doc:name="Logger"/>
+    </flow>
+
+	<flow name="dsr001VMSapFlow" doc:name="dsr001VMSapFlow">
+		<vm:inbound-endpoint exchange-pattern="request-response"
+			path="dsr001VMSap" doc:name="VM"/>
+		<set-payload value="dsr001VMSapFlow: Output" doc:name="Set Payload"/>
+		<logger level="INFO" category="com.umg.blueprint" message="#[message.payload]" doc:name="Logger"/>
+	</flow>
+
+	<flow name="dsr001FileSapFlow" doc:name="dsr001FileSapFlow">
+		<vm:inbound-endpoint exchange-pattern="request-response"
+			path="dsr001FileSap" doc:name="VM"/>
+		<set-payload value="dsr001FileSap: Triggered" doc:name="Set Payload"/>
+		<logger level="INFO" category="com.umg.blueprint" message="#[message.payload]" doc:name="Logger"/>
+	</flow>
+</mule>

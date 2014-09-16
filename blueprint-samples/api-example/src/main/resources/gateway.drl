@@ -1,0 +1,24 @@
+package com.umg.blueprint;
+
+import org.mule.MessageExchangePattern;
+global org.mule.module.bpm.MessageService mule;
+
+rule "SAP Routing"
+  dialect "mvel"
+when
+	$em : EnterpriseMessage(source == "dsr")
+then
+	Endpoint $fileEp = new Endpoint(MessageExchangePattern.ONE_WAY, "dsr001FileSap");
+	$em.endpoints.add($fileEp);
+	$em.target = "sap";
+end
+
+rule "Other Routing"
+  dialect "mvel"
+when
+	$em : EnterpriseMessage(source != "dsr")
+then
+	Endpoint $vmEp = new Endpoint(MessageExchangePattern.REQUEST_RESPONSE, "dsr001VMSap");
+	$em.endpoints.add($vmEp);
+	$em.target = "sap";
+end
