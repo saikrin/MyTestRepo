@@ -3,32 +3,31 @@
 [Connector description including destination service or application with]
 
 # Mule supported versions
-Examples:
 Mule 3.4.x, 3.5.x
-Mule 3.4.1
-
-# [Destination service or application name] supported versions
-Example:
-Oracle E-Business Suite 12.1 and above.
-
-#Service or application supported modules
-Example:
-Oracle CRM
-Oracle Financials
-or 
-Salesforce API v.24
-Salesforce Metadata API
-
-
-# Installation 
-For beta connectors you can download the source code and build it with devkit to find it available on your local repository. Then you can add it to Studio…<TBD>
-
-For released connectors you can download them from the update site in Studio. 
-Open MuleStudio, go to Help → Install New Software and select MuleStudio Cloud Connectors Update Site where you’ll find all avaliable connectors.
 
 #Usage
-For information about usage our documentation at http://github.com/mulesoft/umglogger.
+<?xml version="1.0" encoding="UTF-8"?>
 
-# Reporting Issues
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:spring="http://www.springframework.org/schema/beans"
+      xmlns:umglogger="http://www.mulesoft.org/schema/mule/umglogger"
+      xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/umglogger http://www.mulesoft.org/schema/mule/umglogger/1.0/mule-umglogger.xsd">
 
-We use GitHub:Issues for tracking issues with this connector. You can report new issues at this link http://github.com/mulesoft/umglogger/issues.
+	
+    <umglogger:config>
+		<umglogger:context-params>
+			<umglogger:context-param key="serviceName">UMGLoggerTestService</umglogger:context-param>
+		</umglogger:context-params>
+    </umglogger:config>
+
+    <flow name="testFlow">
+        <umglogger:log message="#[message.payload]" level="INFO"/>
+        <umglogger:log message="#[message.payload]" level="ERROR"/>
+        <umglogger:log message="#[message.payload]" level="DEBUG"/>
+    </flow>
+
+</mule>
