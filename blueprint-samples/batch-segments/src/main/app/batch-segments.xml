@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:context="http://www.springframework.org/schema/context" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd">
+    <context:property-placeholder location="universal.properties"/>
+    <batch:job name="batch-segmentsBatch1">
+        <batch:input>
+            <file:inbound-endpoint path="${copa.file.inbound}" responseTimeout="10000" doc:name="File"/>
+            <expression-component doc:name="Expression">
+            	payload = new com.mulesoft.umg.SegmentIterator(payload);
+            </expression-component>
+        </batch:input>
+        <batch:process-records>
+            <batch:step name="Batch_Step">
+                <logger message="Segment: #[payload]" level="INFO" doc:name="Logger"/>
+                <foreach doc:name="For Each">
+                    <choice doc:name="Choice">
+                        <when expression="#[payload.startsWith(&quot;TAX&quot;)]">
+                            <logger message="TAX LINE: #[payload]" level="INFO" doc:name="Logger"/>
+                        </when>
+                        <when expression="#[payload.startsWith(&quot;LINE&quot;)]">
+                            <logger message="LINE LINE: #[payload]" level="INFO" doc:name="Logger"/>
+                        </when>
+                        <when expression="#[payload.startsWith(&quot;HEAD&quot;)]">
+                            <logger message="HEAD LINE: #[payload]" level="INFO" doc:name="Logger"/>
+                        </when>
+                        <otherwise>
+                            <logger message="OTHER LINE: #[payload]" level="INFO" doc:name="Logger"/>
+                        </otherwise>
+                    </choice>
+                </foreach>
+            </batch:step>
+        </batch:process-records>
+    </batch:job>
+</mule>
