@@ -1,0 +1,42 @@
+#%RAML 0.8
+---
+title: UMG Audit API
+version: 1.0
+baseUri: http://localhost:8081/api
+documentation:
+  - title: API Gateway Sample
+    content: |
+      Demo'ing API Gateway functionality using Drools
+/audit:
+  displayName: Audit
+  #description: |
+  #  A collection of routes
+  get:
+    description: Lookup Audit Messages
+    queryParameters:
+      messageId:
+        description: |
+          Filter the list of end point type.
+        type: string
+        required: true
+
+    responses:
+      200:
+        body:
+          application/json:
+  post:
+    description: Add audit entry
+    headers: 
+      messageId:
+        description: |
+          Filter the list of end point type.
+        type: string
+        required: true
+    body:
+      application/json:
+    responses:
+      200:
+        description: |
+          Audit message successfully posted.
+        body:
+          "*/*":
