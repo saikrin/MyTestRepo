@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:file-utils="http://www.mulesoft.org/schema/mule/fileutils" 
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:cxf="http://www.mulesoft.org/schema/mule/cxf"
+	xmlns:data-mapper="http://www.mulesoft.org/schema/mule/ee/data-mapper"
+	xmlns:jdbc-ee="http://www.mulesoft.org/schema/mule/ee/jdbc"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/fileutils http://www.mulesoft.org/schema/mule/fileutils/3.3/mule-fileutils.xsd
+http://www.mulesoft.org/schema/mule/ee/jdbc http://www.mulesoft.org/schema/mule/ee/jdbc/current/mule-jdbc-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schema/mule/ee/data-mapper/current/mule-data-mapper.xsd
+http://www.mulesoft.org/schema/mule/cxf http://www.mulesoft.org/schema/mule/cxf/current/mule-cxf.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+
+	
+	<file:connector name="fileConnector" autoDelete="false"
+		outputAppend="true" streaming="false" validateConnections="true"
+		doc:name="File">
+	</file:connector>
+
+	<file:endpoint path="${copa.file.inbound}" name="fileInboundEndpoint1"
+		connector-ref="fileConnector"
+		moveToPattern="#[message.inboundProperties['originalFileName']].upload"
+		moveToDirectory="${copa.file.inbound}" pollingFrequency="${copa.file.polling}"
+		fileAge="${copa.file.fileage}" responseTimeout="10000" doc:name="File">
+		<file:filename-wildcard-filter pattern="*.tsv"/>
+	</file:endpoint>
+
+    <context:property-placeholder location="universal.properties"/>
+		
+	<flow name="fileHandlerFlow1" doc:name="fileHandlerFlow1">
+		<file:inbound-endpoint ref="fileInboundEndpoint1" doc:name="File"/>
+		<logger level="INFO" message="Original filename: #[message.inboundProperties['originalFileName']]" doc:name="Logger"/>
+
+		<!-- Construct Enterprise Message -->
+		<expression-component>
+		  import com.umg.blueprint.EnterpriseMessage;
+		  EnterpriseMessage mesg = new EnterpriseMessage();
+		  mesg.source = message.inboundProperties['originalFileName'] + ".upload";
+		  payload = mesg;
+		</expression-component>
+		<logger level="INFO" message="Sending payload: #[message.payload]" doc:name="Logger"/>
+		<json:object-to-json-transformer />
+
+		<!-- Ideally, Enterprise Message is sent to API Gateway at this stage -->
+		<http:outbound-endpoint address="http://localhost:8082/apiGateway"/>
+	</flow>
+
+	<flow name="filePickupStarterFlow" doc:name="filePickupStarterFlow">
+		<http:inbound-endpoint address="http://localhost:8082/apiGateway"
+			exchange-pattern="one-way" doc:name="HTTP" />
+		<logger level="INFO" category="filePickupStarterFlow" message="#[groovy:message.getPayloadAsString()]" />
+		<set-variable  value="#[json://source]" variableName="sourceFileName" doc:name="Property" />
+		<batch:execute name="batchFileFlow1" />
+	</flow>
+	
+	<batch:job name="batchFileFlow1">
+		<batch:input>
+			<logger level="INFO" />
+			<expression-component>
+				import java.io.File;
+				import org.apache.commons.io.FileUtils;
+				import org.apache.commons.io.LineIterator;
+				System.out.println(flowVars['sourceFileName']);
+				File file = new File("${copa.file.inbound}/" + flowVars['sourceFileName']);
+				LineIterator iter = FileUtils.lineIterator(file);
+				payload = iter;
+			</expression-component>
+			<set-variable value="#[message.payload]" variableName="originalPayload" doc:name="Variable" />
+		</batch:input>
+		<batch:process-records>
+			<batch:step name="step-output-successful">
+				<batch:commit size="${copa.batch.size}" doc:name="Batch Commit">
+					<logger message="Commiting successful batch... #[payload.size()]"
+						level="INFO" doc:name="Logger" />
+				</batch:commit>
+			</batch:step>
+			<batch:step name="step-output-failed" accept-policy="ONLY_FAILURES">
+				<batch:commit size="${copa.batch.size}" doc:name="Batch Commit">
+					<logger message="Error batch... #[payload.size()]" level="INFO" doc:name="Logger" />
+				</batch:commit>
+			</batch:step>
+		</batch:process-records>
+		<batch:on-complete>
+			<logger
+				message="Batch processing finished: #[payload.loadedRecords] Loaded Records and #[payload.failedRecords] Failed Records"
+				level="INFO" doc:name="Log Results" />
+			<logger level="INFO" message="#[flowVars['originalPayload']]"/>
+			<flow-ref name="moveFile" />
+		</batch:on-complete>
+	</batch:job>
+
+	<sub-flow name="moveFile">
+		<expression-component>
+			import java.io.File;
+			import org.apache.commons.io.FileUtils;
+			import java.util.Date;
+			import org.apache.log4j.Logger;
+			
+			Logger log = Logger.getRootLogger();
+			
+			//Close iterator so that original file can be deleted.
+			flowVars['originalPayload'].close();
+			String originalFileName = "${copa.file.inbound}/" + flowVars['sourceFileName'];
+			File file = new File(originalFileName);
+			String newFileName = "${copa.file.inbound}/" + flowVars['sourceFileName'] + server.dateTime.format("yyyy.MM.dd HH-mm-ssz");
+			File newFile = new File(newFileName);
+			File destDir = new File("${copa.file.moveto}");
+			FileUtils.moveFile(file, newFile);
+			FileUtils.moveFileToDirectory(newFile, destDir, true);
+			log.info(String.format("Moved original file %s to %s", originalFileName, newFileName));
+		</expression-component>
+	</sub-flow>
+
+</mule>
