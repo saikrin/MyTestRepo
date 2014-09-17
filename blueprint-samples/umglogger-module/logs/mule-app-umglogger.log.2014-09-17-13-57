@@ -1,0 +1,8 @@
+ [2014-09-17/13:57:03.966+0100] INFO  com.umg.modules.umglogger.UMGLoggerModule [Thread-1] - {serviceName=UMGLoggerTestService}
+UMGLoggerTestService [2014-09-17/13:57:08.794+0100] INFO  com.umg.modules.umglogger.UMGLoggerModule [Thread-1] - UMG Logger Test Message
+UMGLoggerTestService [2014-09-17/13:57:08.795+0100] ERROR com.umg.modules.umglogger.UMGLoggerModule [Thread-1] - UMG Logger Test Message
+UMGLoggerTestService [2014-09-17/13:57:08.795+0100] DEBUG com.umg.modules.umglogger.UMGLoggerModule [Thread-1] - UMG Logger Test Message
+ [2014-09-17/13:57:33.779+0100] INFO  com.umg.modules.umglogger.UMGLoggerModule [Thread-1] - {serviceName=UMGLoggerTestService}
+UMGLoggerTestService [2014-09-17/13:57:38.562+0100] INFO  com.umg.modules.umglogger.UMGLoggerModule [Thread-1] - UMG Logger Test Message
+UMGLoggerTestService [2014-09-17/13:57:38.563+0100] ERROR com.umg.modules.umglogger.UMGLoggerModule [Thread-1] - UMG Logger Test Message
+UMGLoggerTestService [2014-09-17/13:57:38.564+0100] DEBUG com.umg.modules.umglogger.UMGLoggerModule [Thread-1] - UMG Logger Test Message

@@ -1,0 +1,7 @@
+<!-- BEGIN_INCLUDE(umglogger:log) -->
+	<umglogger:log/>
+<!-- END_INCLUDE(umglogger:log) -->
+
+<!-- BEGIN_INCLUDE(umglogger:config) -->
+	<umglogger:config/>
+<!-- END_INCLUDE(umglogger:config) -->
