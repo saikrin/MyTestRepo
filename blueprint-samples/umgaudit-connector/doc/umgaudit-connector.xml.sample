@@ -1,0 +1,3 @@
+<!-- BEGIN_INCLUDE(umgaudit:lookup) -->
+    <umgaudit:lookup messageId="#[message.payload]" />
+<!-- END_INCLUDE(umgaudit:lookup) -->

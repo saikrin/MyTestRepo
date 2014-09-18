@@ -1,4 +1,4 @@
-enterprise-mule
-===============
+enterprise-services
+===================
 
-Contains integration projects built in MuleSoft
+Primary codebase for the Enterprise Services team
