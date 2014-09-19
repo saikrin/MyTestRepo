@@ -1,0 +1,21 @@
+﻿$env:VersionMinor = %UmgEnterpriseServicesBuild_MuleSoftSamples_ApiGateway_BuildApiGateway.system.build.number%
+$env:ServersEnv = "local`$257d1c0c-cb92-48fa-b074-1f1ed6e356e3"
+$env:URL = "http://172.25.172.240:8888/mmc351/api"
+
+#UPLOAD
+$UploadResultJson = curl --% --basic -u admin:admin -F file=@c:\temp\umglogger-module-1.0.0-SNAPSHOT.zip -F name=umglogger-module -F version=1.0.%VersionMinor% --header "Content-Type: multipart/form-data" %URL%/repository
+Write-Host $UploadResultJson
+$UploadResultObject = $UploadResultJson | ConvertFrom-Json
+$env:UploadedVersionEnv = $UploadResultObject.versionId
+
+#CREATE DEPLOYMENT
+$CreateDeploymentResultJson = curl --% --basic -u admin:admin -d "{\"name\" : \"umglogger-module%VersionMinor%\" ,\"servers\": [ \"%ServersEnv%\" ],\"applications\": [ \"%UploadedVersionEnv%\" ]}" --header "Content-Type: application/json" %URL%/deployments
+$CreateDeploymentObject = $CreateDeploymentResultJson | ConvertFrom-Json
+Write-Host $CreateDeploymentResultJson
+Write-Host $CreateDeploymentObject.id
+
+#DEPLOY
+$env:DeploymentIdEnv = $CreateDeploymentObject.id
+$DeployCommand = curl --% --basic -u admin:admin -X POST %URL%/deployments/%DeploymentIdEnv%/deploy
+Write-Host $DeployCommand
+invoke-expression $DeployCommand
