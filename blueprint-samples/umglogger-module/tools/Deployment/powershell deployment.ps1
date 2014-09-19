@@ -1,4 +1,4 @@
-﻿$env:VersionMinor = $env:build_number
+﻿$env:VersionMinor = $env:UmgEnterpriseServicesBuild_MuleSoftSamples_ApiGateway_BuildApiGateway_build_number
 $env:ServersEnv = "local`$257d1c0c-cb92-48fa-b074-1f1ed6e356e3"
 $env:URL = "http://172.25.172.240:8888/mmc351/api/"
 
