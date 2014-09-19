@@ -1,10 +1,10 @@
-﻿$env:VersionMinor = 1234
+﻿$env:VersionMinor = %build.number%
 $env:ServersEnv = "local`$257d1c0c-cb92-48fa-b074-1f1ed6e356e3"
 $env:URL = "http://172.25.172.240:8888/mmc351/api/"
 
 
 #UPLOAD
-$UploadResultJson = curl --% --basic -u admin:admin -F file=@c:\temp\umglogger-module-1.0.0-SNAPSHOT.zip -F name=umglogger-module -F version=1.0.%VersionMinor% --header "Content-Type: multipart/form-data" %URL%repository
+$UploadResultJson = .\curl.exe --% --basic -u admin:admin -F file=@..\..\target\umglogger-module-%VersionMinor%-SNAPSHOT.zip -F name=umglogger-module -F version=1.0.%VersionMinor% --header "Content-Type: multipart/form-data" %URL%repository
 Write-Host $UploadResultJson
 $UploadResultObject = $UploadResultJson | ConvertFrom-Json
 $env:UploadedVersionEnv = $UploadResultObject.versionId
