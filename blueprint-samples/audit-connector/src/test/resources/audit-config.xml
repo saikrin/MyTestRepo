@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:spring="http://www.springframework.org/schema/beans"
+      xmlns:audit="http://www.mulesoft.org/schema/mule/audit"
+      xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/audit http://www.mulesoft.org/schema/mule/audit/1.0/mule-audit.xsd" version="EE-3.5.0">
+
+    <audit:config name="Audit" doc:name="Audit">
+		<audit:context-params>
+			<audit:context-param key="paramA">paramA</audit:context-param>
+			<audit:context-param key="paramB">paramB</audit:context-param>
+			<audit:context-param key="paramC">paramC</audit:context-param>
+		</audit:context-params>
+    </audit:config>
+
+    <flow name="testFlow" doc:name="testFlow">
+        <audit:log doc:name="Audit" config-ref="Audit"/>
+        <logger level="INFO" message="Message: #[message.payload]" doc:name="Logger"/>
+    </flow>
+
+</mule>
