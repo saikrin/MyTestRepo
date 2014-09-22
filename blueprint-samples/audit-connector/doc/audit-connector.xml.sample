@@ -1,0 +1,3 @@
+<!-- BEGIN_INCLUDE(audit:lookup) -->
+    <audit:lookup messageId="#[message.payload]" />
+<!-- END_INCLUDE(audit:lookup) -->
