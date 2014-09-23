@@ -5,7 +5,7 @@
 	<groupId>com.umg</groupId>
 	<artifactId>api-example</artifactId>
 	<packaging>mule</packaging>
-	<version>${teamcity.build.vcsroot.branch}</version>
+	<version>${build.vcs.branch.UmgEnterpriseServicesBuild_MuleSoftSamples_ApiGateway_EnterpriseMule}</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
