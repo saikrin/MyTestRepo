@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry exported="true" kind="con" path="MULE_RUNTIME"/>
+	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/main/resources"/>
+	<classpathentry kind="src" output="target/test-classes" path="src/test/java"/>
+	<classpathentry kind="src" output="target/test-classes" path="src/test/resources"/>
+	<classpathentry kind="src" path="src/main/api"/>
+	<classpathentry kind="con" path="MULE_LIB/OAuth provider module/org.mule.tooling.ui.contribution.oauth2-provider.3.5.0"/>
+	<classpathentry kind="src" path="src/main/app"/>
+	<classpathentry kind="src" path="mappings"/>
+	<classpathentry kind="lib" path="commons-configuration-1.10.jar"/>
+	<classpathentry kind="lib" path="commons-jci-core-1.1.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>
